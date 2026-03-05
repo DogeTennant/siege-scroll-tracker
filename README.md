@@ -1,6 +1,6 @@
 # Siege Scroll Tracker
 
-A tool for **Raid: Shadow Legends** to track siege scroll usage per clan member. See who's using their scrolls, who isn't, with full win/loss breakdowns per building.
+A tool for **Raid: Shadow Legends** clan leaders to track siege scroll usage per clan member. See who's using their scrolls, who isn't, with full win/loss breakdowns per building.
 
 ## Features
 
@@ -28,20 +28,14 @@ Go to [Releases](../../releases) and download the latest `SiegeTracker.zip`. Ext
 2. Click **Fix Issues** to install the mitmproxy certificate (one-time only)
 3. All status indicators at the top should show green ✓
 
-### 4. Detect Your Server (one-time)
+### 4. Capture Siege Data
 
-1. Close Raid if it's running
-2. Click **Detect** next to the server field
-3. Launch Raid — the tool will automatically find your server domain
-4. Once detected, it's saved for future use
-
-### 5. Capture Siege Data
-
-1. Click **Start Capture**
-2. Launch Raid (or it may already be running), go to Siege
-3. Click through **each building** you want to track
-4. Click **Stop & Report** — hosts file is cleaned up, report appears
-5. Raid works normally again immediately
+1. **Launch Raid** first (or have it already running)
+2. Click **Start Capture** — the tool auto-detects your game servers from DNS
+3. Log into Raid (if not already logged in), go to Siege
+4. Click through **each building** you want to track
+5. Click **Stop & Report** — hosts file is cleaned up, report appears
+6. Raid works normally again immediately
 
 ## How It Works
 
@@ -93,8 +87,8 @@ INACTIVE: Dczmontreal, Gumbo, t0my11, Tabbz87
 | No clan roster detected | Make sure capture is running *before* you log into Raid |
 | Missing buildings in report | You must click each building in the siege screen — only clicked buildings are captured |
 | Certificate errors | Run as admin and click Fix Issues in the app |
-| Server detection doesn't find anything | Make sure Raid is fully closed before clicking Detect, then launch it fresh |
-| Wrong server detected | Close Raid, flush DNS (`ipconfig /flushdns`), try Detect again |
+| Server detection doesn't find anything | Make sure Raid is running (or was recently running) before clicking Start Capture |
+| Wrong server detected | Close Raid, run `ipconfig /flushdns` in admin cmd, relaunch Raid, then Start Capture |
 
 ## Safety & Privacy
 
@@ -106,10 +100,6 @@ INACTIVE: Dczmontreal, Gumbo, t0my11, Tabbz87
 ## Building from Source
 
 ```bash
-<<<<<<< HEAD
-=======
-# Clone the repo
->>>>>>> d7de3eab5c013976766001bb4c879b005b95366c
 git clone https://github.com/DogeTennant/siege-scroll-tracker.git
 cd siege-scroll-tracker
 

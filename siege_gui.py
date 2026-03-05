@@ -143,7 +143,7 @@ def ensure_addon_exists():
 
 # ── Config ───────────────────────────────────────────────────────────────────
 
-DEFAULT_CONFIG = {"server_domain": "rdint1s09.plrm.zone"}
+DEFAULT_CONFIG = {}
 
 
 def load_config():
@@ -242,15 +242,19 @@ def install_cert():
 
 # ── Hosts File Management ───────────────────────────────────────────────────
 
-def add_hosts_entry(domain):
-    entry = f"127.0.0.1  {domain}  {HOSTS_MARKER}\n"
+def add_hosts_entries(domains):
+    """Add 127.0.0.1 redirects for multiple game server domains."""
     try:
         with open(HOSTS_PATH, "r") as f:
             content = f.read()
-        if HOSTS_MARKER in content:
-            return True
-        with open(HOSTS_PATH, "a") as f:
-            f.write(entry)
+        # Remove any old entries first
+        lines = content.splitlines(True)
+        lines = [l for l in lines if HOSTS_MARKER not in l]
+        # Add new entries
+        for domain in domains:
+            lines.append(f"127.0.0.1  {domain}  {HOSTS_MARKER}\n")
+        with open(HOSTS_PATH, "w") as f:
+            f.writelines(lines)
         return True
     except Exception:
         return False
@@ -266,6 +270,20 @@ def remove_hosts_entry():
         return True
     except Exception:
         return False
+
+
+def find_rdint_domains():
+    """Scan Windows DNS cache for Raid game server domains."""
+    import re
+    try:
+        r = subprocess.run(
+            ["ipconfig", "/displaydns"],
+            capture_output=True, text=True, timeout=10,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+        domains = set(re.findall(r'(rdint\d+s\d+\.plrm\.zone)', r.stdout))
+        return sorted(domains)
+    except Exception:
+        return []
 
 
 # ── Alliance / Roster Parsing ────────────────────────────────────────────────
@@ -397,7 +415,7 @@ class SiegeTrackerApp:
         self.clan_members = {}
         self.config = load_config()
         self.server_ip = None
-        self._detecting = False
+        self._polling_for_servers = False
         self.report_plain = ""
 
         self.bg = "#1a1a2e"
@@ -471,19 +489,14 @@ class SiegeTrackerApp:
         self.fix_btn.pack_forget()  # Hidden until needed
 
         # Server config
+        # Server status
         server_frame = ttk.Frame(main, style="Main.TFrame")
         server_frame.pack(fill="x", pady=(5, 3))
         ttk.Label(server_frame, text="Game Server:",
                   style="Roster.TLabel").pack(side="left")
-        self.server_var = tk.StringVar(value=self.config["server_domain"])
-        self.server_entry = tk.Entry(server_frame, textvariable=self.server_var,
-            bg=self.bg_light, fg=self.text_color, insertbackground="white",
-            font=("Consolas", 10), relief="flat", width=30)
-        self.server_entry.pack(side="left", padx=(5, 0))
-
-        self.detect_btn = ttk.Button(server_frame, text="Detect",
-            style="Small.TButton", command=self._detect_server)
-        self.detect_btn.pack(side="left", padx=(5, 0))
+        self.server_label = ttk.Label(server_frame,
+            text="auto-detect on capture", style="Roster.TLabel")
+        self.server_label.pack(side="left", padx=(5, 0))
 
         # Roster status
         self.roster_label = ttk.Label(main, text="", style="Roster.TLabel")
@@ -691,107 +704,71 @@ class SiegeTrackerApp:
         self.report_text.configure(state="disabled")
         self.report_plain = text
 
-    # ── Server Detection ────────────────────────────────────────────────
-
-    def _detect_server(self):
-        """Auto-detect game server by monitoring DNS cache."""
-        self.detect_btn.configure(state="disabled")
-        self._set_status("Flushing DNS cache...", self.yellow)
-        self.root.update()
-
-        # Flush DNS so we get a clean slate
-        subprocess.run(["ipconfig", "/flushdns"], capture_output=True,
-                       creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
-        time.sleep(0.3)
-
-        self._set_status(
-            "● Detecting — launch Raid now and wait for login screen...",
-            self.yellow)
-        self._detecting = True
-
-        threading.Thread(target=self._poll_dns, daemon=True).start()
-
-    def _poll_dns(self):
-        """Poll DNS cache for rdint*.plrm.zone entries."""
-        import re
-        start = time.time()
-        timeout = 120  # 2 minutes
-
-        while self._detecting and (time.time() - start) < timeout:
-            try:
-                r = subprocess.run(
-                    ["ipconfig", "/displaydns"],
-                    capture_output=True, text=True, timeout=10,
-                    creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
-
-                # Find all rdint domains in DNS cache
-                domains = re.findall(
-                    r'(rdint\d+s\d+\.plrm\.zone)', r.stdout)
-
-                if domains:
-                    # First one to appear after flush is the login server
-                    domain = domains[0]
-                    self._detecting = False
-                    self.root.after(0, self._on_server_detected, domain)
-                    return
-
-            except Exception:
-                pass
-
-            time.sleep(1)
-
-        # Timeout
-        self._detecting = False
-        self.root.after(0, self._on_detect_timeout)
-
-    def _on_server_detected(self, domain):
-        """Called when server domain is found."""
-        self.server_var.set(domain)
-        self.config["server_domain"] = domain
-        save_config(self.config)
-        self.detect_btn.configure(state="normal")
-        self._set_status(f"Detected server: {domain}", self.green)
-
-    def _on_detect_timeout(self):
-        """Called when detection times out."""
-        self.detect_btn.configure(state="normal")
-        self._set_status(
-            "Detection timed out — enter server manually or try again",
-            self.red)
-
     # ── Capture Control ──────────────────────────────────────────────────
 
     def _start_capture(self):
-        # Stop any active server detection
-        self._detecting = False
-
-        domain = self.server_var.get().strip()
-        if not domain:
-            messagebox.showerror("No Server", "Enter the game server domain.")
-            return
-
-        self.config["server_domain"] = domain
-        save_config(self.config)
-
-        self._set_status("Resolving server IP...", self.yellow)
+        self._set_status("Scanning for game servers...", self.yellow)
         self.start_btn.configure(state="disabled")
         self.root.update()
 
-        # Resolve real IP
+        # Ensure clean state
         remove_hosts_entry()
-        time.sleep(0.2)
         subprocess.run(["ipconfig", "/flushdns"], capture_output=True,
                        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
         time.sleep(0.3)
 
+        # Check DNS cache for rdint domains
+        domains = find_rdint_domains()
+
+        if not domains:
+            # No domains found — poll while user launches Raid
+            self._set_status(
+                "● No game servers found — launch Raid now...", self.yellow)
+            self.root.update()
+            self._polling_for_servers = True
+            threading.Thread(target=self._poll_for_servers, daemon=True).start()
+            return
+
+        self._proceed_with_capture(domains)
+
+    def _poll_for_servers(self):
+        """Poll DNS cache until Raid domains appear."""
+        start = time.time()
+        timeout = 90
+
+        while self._polling_for_servers and (time.time() - start) < timeout:
+            domains = find_rdint_domains()
+            if domains:
+                self._polling_for_servers = False
+                self.root.after(0, self._proceed_with_capture, domains)
+                return
+            time.sleep(1)
+
+        self._polling_for_servers = False
+        self.root.after(0, self._on_poll_timeout)
+
+    def _on_poll_timeout(self):
+        self._set_status(
+            "Timed out waiting for Raid — launch the game and try again",
+            self.red)
+        self.start_btn.configure(state="normal")
+
+    def _proceed_with_capture(self, domains):
+        """Start capture with discovered server domains."""
+        self.server_label.configure(
+            text=f"{len(domains)} domains: {', '.join(domains)}",
+            foreground=self.green)
+
+        # Resolve real IP from first domain (all go to same Cloudflare IPs)
         try:
-            self.server_ip = socket.gethostbyname(domain)
+            self.server_ip = socket.gethostbyname(domains[0])
         except Exception:
             self._set_status("Failed to resolve server IP", self.red)
             self.start_btn.configure(state="normal")
             return
 
-        if not add_hosts_entry(domain):
+        # Redirect ALL rdint domains to localhost
+        if not add_hosts_entries(domains):
             self._set_status("Failed to modify hosts file", self.red)
             self.start_btn.configure(state="normal")
             return
@@ -820,11 +797,10 @@ class SiegeTrackerApp:
         self.monitoring = True
         self.file_count = 0
         self._set_status(
-            f"● Capturing — {domain} → {self.server_ip}", self.green)
+            f"● Capturing — {len(domains)} servers → {self.server_ip}",
+            self.green)
         self._set_count(0)
         self.stop_btn.configure(state="normal")
-        self.server_entry.configure(state="disabled")
-        self.detect_btn.configure(state="disabled")
 
         threading.Thread(target=self._monitor_files, daemon=True).start()
 
@@ -844,6 +820,7 @@ class SiegeTrackerApp:
 
     def _stop_and_report(self):
         self.monitoring = False
+        self._polling_for_servers = False
         if self.mitm_process:
             try:
                 self.mitm_process.terminate()
@@ -863,8 +840,8 @@ class SiegeTrackerApp:
         self._set_status("Capture stopped — hosts file restored", self.text_dim)
         self.start_btn.configure(state="normal")
         self.stop_btn.configure(state="disabled")
-        self.server_entry.configure(state="normal")
-        self.detect_btn.configure(state="normal")
+        self.server_label.configure(
+            text="auto-detect on capture", foreground=self.text_dim)
         self._generate_report()
 
     # ── Report Generation ────────────────────────────────────────────────
@@ -974,6 +951,7 @@ class SiegeTrackerApp:
 
     def on_close(self):
         self.monitoring = False
+        self._polling_for_servers = False
         if self.mitm_process:
             try:
                 self.mitm_process.terminate()
