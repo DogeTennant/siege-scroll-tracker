@@ -1,6 +1,6 @@
 # Siege Scroll Tracker — Setup Guide
 
-A tool for Raid: Shadow Legends clan leaders to track siege scroll usage per clan member. Shows who's using their scrolls, who isn't, and includes win/loss breakdowns per building.
+A tool for Raid: Shadow Legends to track siege scroll usage per clan member. Shows who's using their scrolls, who isn't, and includes win/loss breakdowns per building.
 
 ## What This Tool Does
 
