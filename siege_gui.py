@@ -397,6 +397,7 @@ class SiegeTrackerApp:
         self.clan_members = {}
         self.config = load_config()
         self.server_ip = None
+        self._detecting = False
         self.report_plain = ""
 
         self.bg = "#1a1a2e"
@@ -479,6 +480,10 @@ class SiegeTrackerApp:
             bg=self.bg_light, fg=self.text_color, insertbackground="white",
             font=("Consolas", 10), relief="flat", width=30)
         self.server_entry.pack(side="left", padx=(5, 0))
+
+        self.detect_btn = ttk.Button(server_frame, text="Detect",
+            style="Small.TButton", command=self._detect_server)
+        self.detect_btn.pack(side="left", padx=(5, 0))
 
         # Roster status
         self.roster_label = ttk.Label(main, text="", style="Roster.TLabel")
@@ -686,9 +691,80 @@ class SiegeTrackerApp:
         self.report_text.configure(state="disabled")
         self.report_plain = text
 
+    # ── Server Detection ────────────────────────────────────────────────
+
+    def _detect_server(self):
+        """Auto-detect game server by monitoring DNS cache."""
+        self.detect_btn.configure(state="disabled")
+        self._set_status("Flushing DNS cache...", self.yellow)
+        self.root.update()
+
+        # Flush DNS so we get a clean slate
+        subprocess.run(["ipconfig", "/flushdns"], capture_output=True,
+                       creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+        time.sleep(0.3)
+
+        self._set_status(
+            "● Detecting — launch Raid now and wait for login screen...",
+            self.yellow)
+        self._detecting = True
+
+        threading.Thread(target=self._poll_dns, daemon=True).start()
+
+    def _poll_dns(self):
+        """Poll DNS cache for rdint*.plrm.zone entries."""
+        import re
+        start = time.time()
+        timeout = 120  # 2 minutes
+
+        while self._detecting and (time.time() - start) < timeout:
+            try:
+                r = subprocess.run(
+                    ["ipconfig", "/displaydns"],
+                    capture_output=True, text=True, timeout=10,
+                    creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+
+                # Find all rdint domains in DNS cache
+                domains = re.findall(
+                    r'(rdint\d+s\d+\.plrm\.zone)', r.stdout)
+
+                if domains:
+                    # First one to appear after flush is the login server
+                    domain = domains[0]
+                    self._detecting = False
+                    self.root.after(0, self._on_server_detected, domain)
+                    return
+
+            except Exception:
+                pass
+
+            time.sleep(1)
+
+        # Timeout
+        self._detecting = False
+        self.root.after(0, self._on_detect_timeout)
+
+    def _on_server_detected(self, domain):
+        """Called when server domain is found."""
+        self.server_var.set(domain)
+        self.config["server_domain"] = domain
+        save_config(self.config)
+        self.detect_btn.configure(state="normal")
+        self._set_status(f"Detected server: {domain}", self.green)
+
+    def _on_detect_timeout(self):
+        """Called when detection times out."""
+        self.detect_btn.configure(state="normal")
+        self._set_status(
+            "Detection timed out — enter server manually or try again",
+            self.red)
+
     # ── Capture Control ──────────────────────────────────────────────────
 
     def _start_capture(self):
+        # Stop any active server detection
+        self._detecting = False
+
         domain = self.server_var.get().strip()
         if not domain:
             messagebox.showerror("No Server", "Enter the game server domain.")
@@ -748,6 +824,7 @@ class SiegeTrackerApp:
         self._set_count(0)
         self.stop_btn.configure(state="normal")
         self.server_entry.configure(state="disabled")
+        self.detect_btn.configure(state="disabled")
 
         threading.Thread(target=self._monitor_files, daemon=True).start()
 
@@ -787,6 +864,7 @@ class SiegeTrackerApp:
         self.start_btn.configure(state="normal")
         self.stop_btn.configure(state="disabled")
         self.server_entry.configure(state="normal")
+        self.detect_btn.configure(state="normal")
         self._generate_report()
 
     # ── Report Generation ────────────────────────────────────────────────

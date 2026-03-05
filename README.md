@@ -4,6 +4,7 @@ A tool for **Raid: Shadow Legends** clan leaders to track siege scroll usage per
 
 ## Features
 
+- **Automatic server detection** — click Detect, launch Raid, server found automatically
 - **Automatic clan detection** — roster is captured on login, no manual setup
 - **Per-member scroll tracking** — total scrolls, wins, losses, buildings attacked
 - **One-click capture** — just click Start, play the game, click Stop
@@ -21,13 +22,26 @@ Download and install from [mitmproxy.org](https://mitmproxy.org/) (free, open-so
 
 Go to [Releases](../../releases) and download the latest `SiegeTracker.zip`. Extract it anywhere.
 
-### 3. Run
+### 3. First Run
 
-1. Double-click **SiegeTracker.exe** — UAC will ask for admin (required for traffic capture)
-2. First run: click **Fix Issues** to install the mitmproxy certificate
-3. Click **Start Capture**
-4. Launch Raid, go to Siege, click through each building
-5. Click **Stop & Report** — done!
+1. Double-click **SiegeTracker.exe** — a UAC prompt will ask for admin rights (required)
+2. Click **Fix Issues** to install the mitmproxy certificate (one-time only)
+3. All status indicators at the top should show green ✓
+
+### 4. Detect Your Server (one-time)
+
+1. Close Raid if it's running
+2. Click **Detect** next to the server field
+3. Launch Raid — the tool will automatically find your server domain
+4. Once detected, it's saved for future use
+
+### 5. Capture Siege Data
+
+1. Click **Start Capture**
+2. Launch Raid (or it may already be running), go to Siege
+3. Click through **each building** you want to track
+4. Click **Stop & Report** — hosts file is cleaned up, report appears
+5. Raid works normally again immediately
 
 ## How It Works
 
@@ -69,15 +83,30 @@ INACTIVE: Dczmontreal, Gumbo, t0my11, Tabbz87
 
 - **Windows 10/11**
 - **mitmproxy** — [download here](https://mitmproxy.org/) (free)
-- **Administrator privileges** — needed to modify hosts file and listen on port 443
+- **Administrator privileges** — needed for hosts file and port 443
+
+## Troubleshooting
+
+| Problem | Solution |
+|---------|----------|
+| Raid won't connect after closing tracker | Open `C:\Windows\System32\drivers\etc\hosts` as admin, delete any line with `# SiegeTracker` |
+| No clan roster detected | Make sure capture is running *before* you log into Raid |
+| Missing buildings in report | You must click each building in the siege screen — only clicked buildings are captured |
+| Certificate errors | Run as admin and click Fix Issues in the app |
+| Server detection doesn't find anything | Make sure Raid is fully closed before clicking Detect, then launch it fresh |
+| Wrong server detected | Close Raid, flush DNS (`ipconfig /flushdns`), try Detect again |
+
+## Safety & Privacy
+
+- The tool only **reads** game data passively — it never sends, modifies, or injects anything
+- The hosts file change is **temporary** and automatically cleaned up when you stop capture
+- The mitmproxy CA certificate only enables local traffic inspection on your machine
+- All data stays local — nothing is uploaded anywhere
 
 ## Building from Source
 
-If you prefer to run from source or build the exe yourself:
-
 ```bash
-# Clone the repo
-git clone https://github.com/YOUR_USERNAME/siege-scroll-tracker.git
+git clone https://github.com/DogeTennant/siege-scroll-tracker.git
 cd siege-scroll-tracker
 
 # Install dependencies
@@ -91,26 +120,6 @@ pip install pyinstaller
 python build.py
 # Output: dist/SiegeTracker/
 ```
-
-## Server Domain
-
-The default server is `rdint1s09.plrm.zone`. If you're on a different game segment, you can change this in the app's server field. To find your server domain, check the `Host` header in any Raid API request.
-
-## Troubleshooting
-
-| Problem | Solution |
-|---------|----------|
-| Raid won't connect after closing tracker | Open `C:\Windows\System32\drivers\etc\hosts` as admin, delete any line with `# SiegeTracker` |
-| No clan roster detected | Make sure capture is running *before* you log into Raid |
-| Missing buildings in report | You must click each building in the siege screen — only clicked buildings are captured |
-| Certificate errors | Run as admin and click Fix Issues in the app |
-
-## Safety & Privacy
-
-- The tool only **reads** game data passively — it never sends, modifies, or injects anything
-- The hosts file change is **temporary** and automatically cleaned up when you stop capture
-- The mitmproxy CA certificate only enables local traffic inspection on your machine
-- All data stays local — nothing is uploaded anywhere
 
 ## License
 
