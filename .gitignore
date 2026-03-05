@@ -1,0 +1,21 @@
+# Build artifacts
+build/
+dist/
+*.spec
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Runtime data (user-specific)
+siege_data/
+config.json
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+Thumbs.db
+.DS_Store
