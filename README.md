@@ -4,7 +4,7 @@ A tool for **Raid: Shadow Legends** clan leaders to track siege scroll usage per
 
 ## Features
 
-- **Automatic server detection** — click Detect, launch Raid, server found automatically
+- **Automatic server detection** — launch Raid, server found automatically
 - **Automatic clan detection** — roster is captured on login, no manual setup
 - **Per-member scroll tracking** — total scrolls, wins, losses, buildings attacked
 - **One-click capture** — just click Start, play the game, click Stop
