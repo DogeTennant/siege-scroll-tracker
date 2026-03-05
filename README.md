@@ -1,6 +1,6 @@
 # Siege Scroll Tracker
 
-A tool for **Raid: Shadow Legends** clan leaders to track siege scroll usage per clan member. See who's using their scrolls, who isn't, with full win/loss breakdowns per building.
+A tool for **Raid: Shadow Legends** to track siege scroll usage per clan member. See who's using their scrolls, who isn't, with full win/loss breakdowns per building.
 
 ## Features
 
@@ -106,6 +106,10 @@ INACTIVE: Dczmontreal, Gumbo, t0my11, Tabbz87
 ## Building from Source
 
 ```bash
+<<<<<<< HEAD
+=======
+# Clone the repo
+>>>>>>> d7de3eab5c013976766001bb4c879b005b95366c
 git clone https://github.com/DogeTennant/siege-scroll-tracker.git
 cd siege-scroll-tracker
 

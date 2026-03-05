@@ -1,0 +1,110 @@
+C:\Users\Tennant\Desktop\SiegeTracker>python debug_bin.py siege_data\building_201613_033.bin
+============================================================
+  FILE: siege_data\building_201613_033.bin
+  Top-level type: dict
+============================================================
+
+STRUCTURE (first few levels):
+root: dict (1 keys)
+  ['b']: dict (17 keys)
+    ['y']: int = 1
+    ['i']: int = 2002
+    ['r']: int = 1008
+    ['l']: int = 3
+    ['su']: int = 3738
+    ['sr']: int = 0
+    ['d']: bool = True
+    ['m']: int = 43
+    ['p']: bool = False
+    ['u']: int = 0
+    ['df']: bool = False
+    ['rf']: bool = False
+    ['am']: None
+    ['ab']: None
+    ['mp']: None
+    ['aq']: None
+    ['g']: list (3 items)
+      [0]: dict (2 keys)
+        ['i']: int = 1
+        ['s']: list (3 items)
+          ... (max depth)
+          ... (max depth)
+          ... (max depth)
+      [1]: dict (2 keys)
+        ['i']: int = 2
+        ['s']: list (3 items)
+          ... (max depth)
+          ... (max depth)
+          ... (max depth)
+      [2]: dict (2 keys)
+        ['i']: int = 3
+        ['s']: list (3 items)
+          ... (max depth)
+          ... (max depth)
+          ... (max depth)
+
+============================================================
+SEARCHING FOR ATTACK ENTRIES...
+============================================================
+
+  ATTACK CANDIDATE at root.b.g[0].s[0].l[0]:
+    w = True (type: bool)
+    a.i = 55269853
+    Key types: ['str', 'str', 'str', 'str', 'str']
+
+  ATTACK CANDIDATE at root.b.g[0].s[0].l[1]:
+    w = False (type: bool)
+    a.i = 94096810
+    Key types: ['str', 'str', 'str', 'str', 'str']
+
+  ATTACK CANDIDATE at root.b.g[0].s[1].l[0]:
+    w = True (type: bool)
+    a.i = 61972801
+    Key types: ['str', 'str', 'str', 'str', 'str']
+
+  ATTACK CANDIDATE at root.b.g[0].s[2].l[0]:
+    w = True (type: bool)
+    a.i = 80695919
+    Key types: ['str', 'str', 'str', 'str', 'str']
+
+  ATTACK CANDIDATE at root.b.g[1].s[0].l[0]:
+    w = True (type: bool)
+    a.i = 62120951
+    Key types: ['str', 'str', 'str', 'str', 'str']
+
+  ATTACK CANDIDATE at root.b.g[1].s[1].l[0]:
+    w = False (type: bool)
+    a.i = 41086383
+    Key types: ['str', 'str', 'str', 'str', 'str']
+
+  ATTACK CANDIDATE at root.b.g[1].s[1].l[1]:
+    w = True (type: bool)
+    a.i = 41086383
+    Key types: ['str', 'str', 'str', 'str', 'str']
+
+  ATTACK CANDIDATE at root.b.g[1].s[2].l[0]:
+    w = False (type: bool)
+    a.i = 41086383
+    Key types: ['str', 'str', 'str', 'str', 'str']
+
+  ATTACK CANDIDATE at root.b.g[1].s[2].l[1]:
+    w = True (type: bool)
+    a.i = 41086383
+    Key types: ['str', 'str', 'str', 'str', 'str']
+
+  ATTACK CANDIDATE at root.b.g[2].s[0].l[0]:
+    w = True (type: bool)
+    a.i = 41086383
+    Key types: ['str', 'str', 'str', 'str', 'str']
+
+  ATTACK CANDIDATE at root.b.g[2].s[1].l[0]:
+    w = True (type: bool)
+    a.i = 61972801
+    Key types: ['str', 'str', 'str', 'str', 'str']
+
+  ATTACK CANDIDATE at root.b.g[2].s[2].l[0]:
+    w = True (type: bool)
+    a.i = 80695919
+    Key types: ['str', 'str', 'str', 'str', 'str']
+
+Done.
