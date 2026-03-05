@@ -247,10 +247,8 @@ def add_hosts_entries(domains):
     try:
         with open(HOSTS_PATH, "r") as f:
             content = f.read()
-        # Remove any old entries first
         lines = content.splitlines(True)
         lines = [l for l in lines if HOSTS_MARKER not in l]
-        # Add new entries
         for domain in domains:
             lines.append(f"127.0.0.1  {domain}  {HOSTS_MARKER}\n")
         with open(HOSTS_PATH, "w") as f:
@@ -258,6 +256,11 @@ def add_hosts_entries(domains):
         return True
     except Exception:
         return False
+
+
+# All known Raid game server domains follow the pattern rdint1sXX.plrm.zone
+# They all resolve to the same Cloudflare IPs, so we redirect them all.
+ALL_RAID_DOMAINS = [f"rdint1s{i:02d}.plrm.zone" for i in range(1, 51)]
 
 
 def remove_hosts_entry():
@@ -270,20 +273,6 @@ def remove_hosts_entry():
         return True
     except Exception:
         return False
-
-
-def find_rdint_domains():
-    """Scan Windows DNS cache for Raid game server domains."""
-    import re
-    try:
-        r = subprocess.run(
-            ["ipconfig", "/displaydns"],
-            capture_output=True, text=True, timeout=10,
-            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
-        domains = set(re.findall(r'(rdint\d+s\d+\.plrm\.zone)', r.stdout))
-        return sorted(domains)
-    except Exception:
-        return []
 
 
 # ── Alliance / Roster Parsing ────────────────────────────────────────────────
@@ -415,7 +404,6 @@ class SiegeTrackerApp:
         self.clan_members = {}
         self.config = load_config()
         self.server_ip = None
-        self._polling_for_servers = False
         self.report_plain = ""
 
         self.bg = "#1a1a2e"
@@ -707,68 +695,26 @@ class SiegeTrackerApp:
     # ── Capture Control ──────────────────────────────────────────────────
 
     def _start_capture(self):
-        self._set_status("Scanning for game servers...", self.yellow)
+        self._set_status("Starting capture...", self.yellow)
         self.start_btn.configure(state="disabled")
         self.root.update()
 
-        # Ensure clean state
+        # Resolve real IP from any rdint domain (they all share Cloudflare IPs)
         remove_hosts_entry()
+        time.sleep(0.2)
         subprocess.run(["ipconfig", "/flushdns"], capture_output=True,
                        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
         time.sleep(0.3)
 
-        # Check DNS cache for rdint domains
-        domains = find_rdint_domains()
-
-        if not domains:
-            # No domains found — poll while user launches Raid
-            self._set_status(
-                "● No game servers found — launch Raid now...", self.yellow)
-            self.root.update()
-            self._polling_for_servers = True
-            threading.Thread(target=self._poll_for_servers, daemon=True).start()
-            return
-
-        self._proceed_with_capture(domains)
-
-    def _poll_for_servers(self):
-        """Poll DNS cache until Raid domains appear."""
-        start = time.time()
-        timeout = 90
-
-        while self._polling_for_servers and (time.time() - start) < timeout:
-            domains = find_rdint_domains()
-            if domains:
-                self._polling_for_servers = False
-                self.root.after(0, self._proceed_with_capture, domains)
-                return
-            time.sleep(1)
-
-        self._polling_for_servers = False
-        self.root.after(0, self._on_poll_timeout)
-
-    def _on_poll_timeout(self):
-        self._set_status(
-            "Timed out waiting for Raid — launch the game and try again",
-            self.red)
-        self.start_btn.configure(state="normal")
-
-    def _proceed_with_capture(self, domains):
-        """Start capture with discovered server domains."""
-        self.server_label.configure(
-            text=f"{len(domains)} domains: {', '.join(domains)}",
-            foreground=self.green)
-
-        # Resolve real IP from first domain (all go to same Cloudflare IPs)
         try:
-            self.server_ip = socket.gethostbyname(domains[0])
+            self.server_ip = socket.gethostbyname(ALL_RAID_DOMAINS[0])
         except Exception:
-            self._set_status("Failed to resolve server IP", self.red)
+            self._set_status("Failed to resolve server IP — check internet", self.red)
             self.start_btn.configure(state="normal")
             return
 
-        # Redirect ALL rdint domains to localhost
-        if not add_hosts_entries(domains):
+        # Redirect ALL possible Raid server domains to localhost
+        if not add_hosts_entries(ALL_RAID_DOMAINS):
             self._set_status("Failed to modify hosts file", self.red)
             self.start_btn.configure(state="normal")
             return
@@ -796,9 +742,11 @@ class SiegeTrackerApp:
 
         self.monitoring = True
         self.file_count = 0
+        self.server_label.configure(
+            text=f"all servers → {self.server_ip}",
+            foreground=self.green)
         self._set_status(
-            f"● Capturing — {len(domains)} servers → {self.server_ip}",
-            self.green)
+            "● Capturing — launch Raid and click buildings", self.green)
         self._set_count(0)
         self.stop_btn.configure(state="normal")
 
@@ -820,7 +768,6 @@ class SiegeTrackerApp:
 
     def _stop_and_report(self):
         self.monitoring = False
-        self._polling_for_servers = False
         if self.mitm_process:
             try:
                 self.mitm_process.terminate()
@@ -951,7 +898,6 @@ class SiegeTrackerApp:
 
     def on_close(self):
         self.monitoring = False
-        self._polling_for_servers = False
         if self.mitm_process:
             try:
                 self.mitm_process.terminate()
