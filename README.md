@@ -77,7 +77,7 @@ If you prefer to run from source or build the exe yourself:
 
 ```bash
 # Clone the repo
-git clone https://github.com/YOUR_USERNAME/siege-scroll-tracker.git
+git clone https://github.com/DogeTennant/siege-scroll-tracker.git
 cd siege-scroll-tracker
 
 # Install dependencies
