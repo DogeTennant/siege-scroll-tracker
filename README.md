@@ -30,10 +30,10 @@ Go to [Releases](../../releases) and download the latest `SiegeTracker.zip`. Ext
 
 ### 4. Capture Siege Data
 
-1. **Launch Raid** first (or have it already running)
-2. Click **Start Capture** — the tool auto-detects your game servers from DNS
-3. Log into Raid (if not already logged in), go to Siege
-4. Click through **each building** you want to track
+1. **Close Raid** if it's running
+2. Click **Start Capture** BEFORE launching Raid — the tool auto-detects your game servers from DNS
+3. Log into Raid, go to Siege
+4. Click through **each building** you want to track — each building can only be scanned once, don't worry about duplicates
 5. Click **Stop & Report** — hosts file is cleaned up, report appears
 6. Raid works normally again immediately
 
