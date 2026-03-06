@@ -1,16 +1,16 @@
 # Siege Scroll Tracker
 
-A tool for **Raid: Shadow Legends** clan leaders to track siege scroll usage per clan member. See who's using their scrolls, who isn't, with full win/loss breakdowns per building.
+A tool for **Raid: Shadow Legends** to track siege scroll usage per clan member. See who's using their scrolls, who isn't, with full win/loss breakdowns per building.
 
 ## Features
 
-- **Automatic server detection** — launch Raid, server found automatically
-- **Automatic clan detection** — roster is captured on login, no manual setup
-- **Per-member scroll tracking** — total scrolls, wins, losses, buildings attacked
-- **One-click capture** — just click Start, play the game, click Stop
-- **No Proxifier needed** — uses local reverse proxy via hosts file redirect
-- **Clipboard export** — copy the report for Discord/chat in one click
-- **Works for any clan** — no hardcoded data, fully self-configuring
+- **Automatic server detection** - launch Raid, server found automatically
+- **Automatic clan detection** - roster is captured on login, no manual setup
+- **Per-member scroll tracking** - total scrolls, wins, losses, buildings attacked
+- **One-click capture** - just click Start, play the game, click Stop
+- **No Proxifier or similar software needed** - uses local reverse proxy via hosts file redirect
+- **Clipboard export** - copy the report for Discord/chat in one click
+- **Works for any clan** - no hardcoded data, fully self-configuring
 
 ## Quick Start
 
@@ -24,17 +24,17 @@ Go to [Releases](../../releases) and download the latest `SiegeTracker.zip`. Ext
 
 ### 3. First Run
 
-1. Double-click **SiegeTracker.exe** — a UAC prompt will ask for admin rights (required)
+1. Double-click **SiegeTracker.exe** - a UAC prompt will ask for admin rights (required)
 2. Click **Fix Issues** to install the mitmproxy certificate (one-time only)
 3. All status indicators at the top should show green ✓
 
 ### 4. Capture Siege Data
 
 1. **Close Raid** if it's running
-2. Click **Start Capture** BEFORE launching Raid — the tool auto-detects your game servers from DNS
+2. Click **Start Capture** BEFORE launching Raid - the tool auto-detects your game servers from DNS
 3. Log into Raid, go to Siege
-4. Click through **each building** you want to track — each building can only be scanned once, don't worry about duplicates
-5. Click **Stop & Report** — hosts file is cleaned up, report appears
+4. Click through **each building** you want to track - each building can only be scanned once, don't worry about duplicates
+5. Click **Stop & Report** - hosts file is cleaned up, report appears
 6. Raid works normally again immediately
 
 ## How It Works
@@ -43,7 +43,7 @@ When you click Start Capture, the tool:
 
 1. Redirects Raid's server domain to your local machine (via Windows hosts file)
 2. Runs a local reverse proxy (mitmproxy) that forwards traffic to the real server
-3. Intercepts `Alliance.Get` (clan roster) and `Siege.GetBuilding` (battle data)
+3. Intercepts clan roster and battle data
 4. Parses attacker entries from building data to count scroll usage per member
 
 When you click Stop & Report:
@@ -52,7 +52,7 @@ When you click Stop & Report:
 2. Raid works normally again immediately
 3. Generates a color-coded report with full breakdown
 
-**The tool only reads game data — it never modifies or sends anything.**
+**The tool only reads game data - it never modifies or sends anything.**
 
 ## Report Example
 
@@ -76,8 +76,8 @@ INACTIVE: Dczmontreal, Gumbo, t0my11, Tabbz87
 ## Requirements
 
 - **Windows 10/11**
-- **mitmproxy** — [download here](https://mitmproxy.org/) (free)
-- **Administrator privileges** — needed for hosts file and port 443
+- **mitmproxy** - [download here](https://mitmproxy.org/) (free)
+- **Administrator privileges** - needed for hosts file and port 443
 
 ## Troubleshooting
 
@@ -85,17 +85,17 @@ INACTIVE: Dczmontreal, Gumbo, t0my11, Tabbz87
 |---------|----------|
 | Raid won't connect after closing tracker | Open `C:\Windows\System32\drivers\etc\hosts` as admin, delete any line with `# SiegeTracker` |
 | No clan roster detected | Make sure capture is running *before* you log into Raid |
-| Missing buildings in report | You must click each building in the siege screen — only clicked buildings are captured |
+| Missing buildings in report | You must click each building in the siege screen - only clicked buildings are captured |
 | Certificate errors | Run as admin and click Fix Issues in the app |
 | Server detection doesn't find anything | Make sure Raid is running (or was recently running) before clicking Start Capture |
 | Wrong server detected | Close Raid, run `ipconfig /flushdns` in admin cmd, relaunch Raid, then Start Capture |
 
 ## Safety & Privacy
 
-- The tool only **reads** game data passively — it never sends, modifies, or injects anything
+- The tool only **reads** game data passively - it never sends, modifies, or injects anything
 - The hosts file change is **temporary** and automatically cleaned up when you stop capture
 - The mitmproxy CA certificate only enables local traffic inspection on your machine
-- All data stays local — nothing is uploaded anywhere
+- All data stays local - nothing is uploaded anywhere
 
 ## Building from Source
 
@@ -117,4 +117,4 @@ python build.py
 
 ## License
 
-MIT License — see [LICENSE](LICENSE) for details.
+MIT License - see [LICENSE](LICENSE) for details.
